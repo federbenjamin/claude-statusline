@@ -10,7 +10,7 @@ Two bash scripts that render the status line in [Claude Code](https://docs.anthr
 
 ## Install
 
-You need `jq` and `git` on your PATH, and a Claude Code that has been run at least once.
+You need bash, `jq` and `git` on your PATH, and a Claude Code that has been run at least once. Works on macOS and Linux; on Windows, run it under Git Bash or WSL.
 
 ```sh
 git clone https://github.com/federbenjamin/claude-statusline.git && cd claude-statusline && ./install.sh
