@@ -265,7 +265,7 @@ if [ "$context_size" -gt 0 ] 2>/dev/null; then
     state="$state_dir/$session_id"
     offset=""; compactions=0
     [ -f "$state" ] && read -r offset compactions < "$state"
-    size=$(stat -f %z "$transcript" 2>/dev/null || echo 0)
+    size=$(stat -c %s "$transcript" 2>/dev/null || stat -f %z "$transcript" 2>/dev/null || echo 0)
     # A missing state, or a transcript smaller than the offset (rewritten), scans from the start.
     if [ -z "$offset" ] || [ "$size" -lt "$offset" ]; then offset=0; compactions=0; fi
     if [ "$size" -gt "$offset" ]; then
@@ -294,7 +294,7 @@ account=""
 config_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 login_stamp=$(security find-generic-password -s "Claude Code-credentials" 2>/dev/null \
   | sed -n 's/.*"mdat"<timedate>=[^"]*"\([0-9]*Z\).*/\1/p')
-[ -z "$login_stamp" ] && login_stamp=$(stat -f %m "$config_dir/.credentials.json" 2>/dev/null)
+[ -z "$login_stamp" ] && login_stamp=$(stat -c %Y "$config_dir/.credentials.json" 2>/dev/null || stat -f %m "$config_dir/.credentials.json" 2>/dev/null)
 acct_cache="$HOME/.claude/.statusline-account/$(printf '%s' "$config_dir" | cksum | cut -d' ' -f1)"
 if [ -n "$login_stamp" ] && [ -f "$acct_cache" ]; then
   read -r c_stamp c_at c_account < "$acct_cache"
@@ -390,7 +390,8 @@ usage_segment() {
   text="${label}: ${stale_mark}${pct}%"
   if [ "$pct" -gt 50 ] && [ -n "$reset" ]; then
     # Round to the minute; lowercase am/pm with no leading zero on the hour.
-    when=$(date -r $(( (reset + 30) / 60 * 60 )) "+$fmt" 2>/dev/null | sed 's/AM$/am/; s/PM$/pm/; s/^0//; s/ 0/ /')
+    at=$(( (reset + 30) / 60 * 60 ))
+    when=$( { date -r "$at" "+$fmt" 2>/dev/null || date -d "@$at" "+$fmt" 2>/dev/null; } | sed 's/AM$/am/; s/PM$/pm/; s/^0//; s/ 0/ /')
     [ -n "$when" ] && text="${text} →${when}"
   fi
   printf "%s" "$(usage_color "$pct")${text}${RESET}"
